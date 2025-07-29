@@ -191,13 +191,37 @@ class Brain_features:
             degree (np.ndarray): Degree centrality for each node.
         """
         # calculate degree centrality
-        degree = np.sum(matrix, axis=1)
+
+        if matrix.ndim == 3:
+            degree = np.sum(matrix, axis=2)
+            
+        elif matrix.ndim == 2:
+            # If the input is a 2D matrix, calculate degree centrality directly
+            degree = np.sum(matrix, axis=1)
+
+        else:
+            raise ValueError("Input matrix must be either 2D or 3D array.")
+        
         return degree
         
+
     def compute_gradient(data, reference_file,kernal='normalized_angle', approach='dm', alignment='procrustes', n_components=3 ):
         align_= GradientMaps(kernel=kernal, approach=approach, alignment=alignment, n_components=n_components)
-        align_.fit(data, reference = reference_file)
-        gradient_ = align_.aligned_
+
+        if data.ndim == 3:
+            gradient_ = np.zeros((data.shape[0], data.shape[1], n_components))
+            for i in range(data.shape[0]): # Loop through subjects
+                align_.fit(data[i], reference = reference_file)
+                gradient_[i] = align_.aligned_
+
+        elif data.ndim == 2:
+            # If data is 2D, fit the gradient directly
+            align_.fit(data, reference = reference_file)
+            gradient_ = align_.aligned_
+
+        else:
+            raise ValueError("Data must be either 2D or 3D array.")
         return gradient_
+    
     
     
